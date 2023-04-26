@@ -8,18 +8,167 @@ datasource db {
 }
 
 model User {
-  id      String   @id @default(uuid())
-  account Account?
+  id               String         @id @default(uuid())
+  account          Account?
+  profile          Profile?
+  name             String?
+  profileImageUrl  String?
+  identityImageUrl String?
+  paymentInfo      Json?
+  isVerified       Boolean        @default(false)
+  isSuspended      Boolean        @default(false)
+  balance          Int
+  sales            Item[]
+  favorites        Item[]         @relation("user_favorites")
+  chats            Chat[]
+  messages         Message[]
+  orders           Order[]        @relation("user_orders")
+  authedReviews    Review[]       @relation("authed_reviews")
+  reviews          Review[]       @relation("user_reviews")
+  withdraws        Withdraw[]
+  notifications    Notification[]
+  // blockedBy        User[]         @relation("blocked_users")
+  // blockedUsers     User[]         @relation("blocked_users")
 
   @@map("users")
 }
 
 model Account {
-  email    String @unique
-  password String @unique
+  user                          User      @relation(fields: [userId], references: [id])
+  userId                        String
+  email                         String    @unique
+  password                      String
+  resetPasswordToken            String?
+  resetPasswordTokenExpiresDate DateTime?
 
-  user   User   @relation(fields: [userId], references: [id])
-  userId String @unique
-
+  @@id([userId])
   @@map("accounts")
+}
+
+model Profile {
+  userId    String
+  user      User   @relation(fields: [userId], references: [id])
+  type      String
+  profileId String
+  data      Json
+
+  @@id([userId])
+  @@map("profiles")
+}
+
+model Order {
+  id          String   @id @default(uuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  isConfirmed Boolean  @default(false)
+  price       Int
+  buyer       User     @relation("user_orders", fields: [buyerId], references: [id])
+  buyerId     String
+  item        Item     @relation(fields: [itemId], references: [id])
+  itemId      String
+  reports     Report[]
+
+  @@map("orders")
+}
+
+model Item {
+  id             String    @id @default(uuid())
+  type           ITEM_TYPE
+  description    String    @db.Text
+  deliveryMethod String
+  deliveryTime   DateTime
+  stock          Int
+  specifications Json
+  game           Game      @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  gameId         String
+  seller         User      @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  sellerId       String
+  favorteUsers   User[]    @relation("user_favorites")
+  orders         Order[]
+
+  @@map("items")
+}
+
+model Game {
+  id             String  @id @default(uuid())
+  name           String
+  description    String? @db.Text
+  specifications Json?
+  imageUrl       String?
+  items          Item[]
+
+  @@map("games")
+}
+
+model Report {
+  id      String @id @default(uuid())
+  title   String
+  content String @db.Text
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId String
+
+  @@map("reports")
+}
+
+model Review {
+  id       String  @id @default(uuid())
+  title    String
+  content  String?
+  rate     Int
+  author   User    @relation("authed_reviews", fields: [authorId], references: [id], onDelete: Cascade)
+  authorId String
+  user     User    @relation("user_reviews", fields: [userId], references: [id], onDelete: Cascade)
+  userId   String
+
+  @@map("reviews")
+}
+
+model Withdraw {
+  id        String   @id @default(uuid())
+  amount    Int
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id])
+  userId    String?
+
+  @@map("withdraws")
+}
+
+model Chat {
+  id       String    @id @default(uuid())
+  name     String
+  users    User[]
+  messages Message[]
+
+  @@map("chats")
+}
+
+model Message {
+  id     String @id @default(uuid())
+  text   String
+  chat   Chat   @relation(fields: [chatId], references: [id])
+  chatId String
+  sender User   @relation(fields: [userId], references: [id])
+  userId String
+
+  @@map("messages")
+}
+
+model Notification {
+  id       String  @id @default(uuid())
+  type     String  @db.VarChar(10)
+  title    String
+  content  String?
+  metadata Json?
+  user     User?   @relation(fields: [userId], references: [id])
+  userId   String?
+
+  @@map("notifications")
+}
+
+// enums
+enum ITEM_TYPE {
+  account
+  in_game_item
+  to_ups
+  game_coins
 }
