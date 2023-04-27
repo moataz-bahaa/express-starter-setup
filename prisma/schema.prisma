@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  // previewFeatures = ["views"]
 }
 
 datasource db {
@@ -17,7 +18,7 @@ model User {
   paymentInfo      Json?
   isVerified       Boolean        @default(false)
   isSuspended      Boolean        @default(false)
-  balance          Int
+  balance          Int            @default(0)
   sales            Item[]
   favorites        Item[]         @relation("user_favorites")
   chats            Chat[]
@@ -27,8 +28,8 @@ model User {
   reviews          Review[]       @relation("user_reviews")
   withdraws        Withdraw[]
   notifications    Notification[]
-  // blockedBy        User[]         @relation("blocked_users")
-  // blockedUsers     User[]         @relation("blocked_users")
+  blockedBy        User[]         @relation("blocked_users")
+  blockedUsers     User[]         @relation("blocked_users")
 
   @@map("users")
 }
@@ -76,9 +77,9 @@ model Item {
   type           ITEM_TYPE
   description    String    @db.Text
   deliveryMethod String
-  deliveryTime   DateTime
-  stock          Int
-  specifications Json
+  deliveryTime   DateTime?
+  stock          Int?
+  specifications Json?
   game           Game      @relation(fields: [gameId], references: [id], onDelete: Cascade)
   gameId         String
   seller         User      @relation(fields: [sellerId], references: [id], onDelete: Cascade)
