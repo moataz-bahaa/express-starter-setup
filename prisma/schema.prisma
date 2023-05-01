@@ -49,9 +49,9 @@ model Account {
 model Profile {
   userId    String
   user      User   @relation(fields: [userId], references: [id])
-  type      String
+  provider  String
   profileId String
-  data      Json
+  data      Json?
 
   @@id([userId])
   @@map("profiles")

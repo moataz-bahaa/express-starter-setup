@@ -1,9 +1,9 @@
-import passport from 'passport';
 import { BadRequestError, NotFoundError } from '../lib/errors.js';
 import prisma from '../prisma/client.js';
 import { comparePassword, hash } from '../lib/bcrypt.js';
-import { generateToken, verifyToken } from '../lib/utils.js';
+import { generateToken } from '../lib/utils.js';
 import { StatusCodes } from 'http-status-codes';
+import passport from 'passport';
 
 export const registerByEmail = async (req, res, next) => {
   const { name, email, password } = req.body;
@@ -79,4 +79,34 @@ export const loginByEmail = async (req, res, next) => {
     userAccount,
     token,
   });
+};
+
+export const registerByFacebook = async (req, res, next) => {
+  passport.authenticate(
+    'facebook-register',
+    (err, user, info) => {
+      if (err) return next(err);
+      res.status(StatusCodes.OK).json({
+        user,
+      });
+    }
+  )(req, res, next);
+};
+
+export const loginByFacebook = async (req, res, next) => {
+  passport.authenticate(
+    'facebook-login',
+    (err, user, info) => {
+      if (err) {
+        return next(err);
+      }
+
+      const token = generateToken({ id: user.id, email: user.email });
+
+      res.status(StatusCodes.OK).json({
+        token,
+        user,
+      });
+    }
+  )(req, res, next);
 };

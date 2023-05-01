@@ -6,14 +6,14 @@ import path from 'path';
 import { Server } from 'socket.io';
 import passport from 'passport';
 
-import authRoutes from './routes/auth.js';
+import routes from './routes/index.js';
 import errorHandlerMiddleware from './middlewares/error-handler.js';
-import { addPassportJwtStrategy } from './middlewares/passport.js';
+import initPassport from './passport/index.js';
 
 const app = express();
 
 // middlewares
-addPassportJwtStrategy();
+initPassport();
 app.use(cors({ origin: '*' }));
 app.use(express.static(path.resolve('public')));
 app.use(express.json());
@@ -21,7 +21,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(passport.initialize());
 
 // routes
-app.use('/auth', authRoutes);
+app.use(routes);
 
 // error handler
 app.use(errorHandlerMiddleware);
